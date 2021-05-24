@@ -1,8 +1,8 @@
 from app import app
 from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm
+from app.forms import LoginForm, PostForm
 from flask_login import current_user, login_user
-from app.models import User
+from app.models import User, Post
 from flask_login import logout_user
 from flask_login import login_required
 from flask import request
@@ -11,17 +11,18 @@ from app import db
 from app.forms import RegistrationForm
 
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    posts = [
-        {
-            'author': {'username': 'Eugen'},
-            'body': 'Hello, World!'
-        }
-    ]
-    return render_template('index.html', title='Home', posts=posts)
+    form = PostForm()
+    if form.validate_on_submit():
+        post = Post(body=form.post.data, author=current_user)
+        db.session.add(post)
+        db.session.commit()
+        flash('Your post has been added')
+        return redirect(url_for('index'))
+    return render_template('index.html', title='Home', form=form)
 
 
 @app.route('/login/', methods=['GET', 'POST'])
@@ -62,3 +63,12 @@ def register():
         flash('Congratulations, you are now a registered user!')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
+
+
+@app.route('/user/<username>')
+@login_required
+def user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(user_id=user.id)
+    return render_template('user.html', user=user, posts=posts)
+
