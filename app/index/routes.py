@@ -1,18 +1,15 @@
-from app import app
-from flask import render_template, flash, redirect, url_for
-from app.forms import LoginForm, PostForm
-from flask_login import current_user, login_user
-from app.models import User, Post
-from flask_login import logout_user
-from flask_login import login_required
-from flask import request
+from flask import render_template, flash, redirect, url_for, request
+from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.urls import url_parse
+
 from app import db
-from app.forms import RegistrationForm
+from app.models import User, Post
+from app.index import bp
+from app.index.forms import RegistrationForm, LoginForm, PostForm
 
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+@bp.route('/', methods=['GET', 'POST'])
+@bp.route('/index/', methods=['GET', 'POST'])
 @login_required
 def index():
     form = PostForm()
@@ -25,10 +22,10 @@ def index():
     return render_template('index.html', title='Home', form=form)
 
 
-@app.route('/login/', methods=['GET', 'POST'])
+@bp.route('/login/', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('index.index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -38,22 +35,21 @@ def login():
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc !='':
-            next_page = url_for('index')
+            next_page = url_for('index.index')
         return redirect(next_page)
-        return redirect(url_for('index'))
     return render_template('login.html', title='Sign In', form=form)
 
 
-@app.route('/logout/')
+@bp.route('/logout/')
 def logout():
     logout_user()
-    return redirect(url_for('index'))
+    return redirect(url_for('index.index'))
 
 
-@app.route('/register/', methods=['GET', 'POST'])
+@bp.route('/register/', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('index.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         user = User(username=form.username.data, email=form.email.data, last_name=form.last_name.data)
@@ -61,14 +57,17 @@ def register():
         db.session.add(user)
         db.session.commit()
         flash('Congratulations, you are now a registered user!')
-        return redirect(url_for('login'))
+        return redirect(url_for('index.login'))
+
+    for fieldName, errorMessages in form.errors.items():
+        for err in errorMessages:
+            print(fieldName, err)
     return render_template('register.html', title='Register', form=form)
 
 
-@app.route('/user/<username>')
+@bp.route('/user/<username>')
 @login_required
-def user(username):
+def user_profile(username):
     user = User.query.filter_by(username=username).first_or_404()
     posts = Post.query.filter_by(user_id=user.id)
     return render_template('user.html', user=user, posts=posts)
-

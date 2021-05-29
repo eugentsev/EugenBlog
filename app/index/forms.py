@@ -5,7 +5,9 @@ from app.models import User
 
 
 class PostForm(FlaskForm):
-    post = TextAreaField('say something', validators=[
+    head = StringField('Heading', validators=[DataRequired()])
+    tag = StringField('Tag', validators=[DataRequired()])
+    post = TextAreaField(validators=[
         DataRequired(), Length(min=1, max=140)
     ])
     submit = SubmitField('Submit')
