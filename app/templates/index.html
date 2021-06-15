@@ -745,21 +745,27 @@
             <!-- /.card-header -->
             <h1>Hello, {{ current_user.username}}</h1>
             <div class="card-body pad">
-              <form action="" method="post">
-                {{ form.hidden_tag() }}
-
-              <div class="mb-3">
-
+            <form action="{{ url_for('index.index') }}" method="post">
+                {{ form.csrf_token }}
+              <div>
+                <p>{{ form.name.label }}<br>
+                {{ form.name(size=32) }}<br>
+                </p>
                 <p>
-                  {{ form.post(class="textarea") }}
-                  {% for error in form.post.errors %}
-                  <span style="color: red;">[{{ error }}]</span>
-                  {% endfor %}
-                <p>{{ form.submit() }}</p>
+                {{ form.heading.label }}<br>
+                {{ form.heading(size=32) }}<br>
+                </p>
+                <p>
+                {{ form.body.label }}<br>
+                {{ form.body(class="textarea") }}
                 </p>
 
-              </div>
-              </form>
+                    </div>
+                  {{ form.submit() }}
+                  </form>
+
+                </div>
+                </form>
               <p class="text-sm mb-0">
                 Editor <a href="https://github.com/summernote/summernote">Documentation and license
                 information.</a>

@@ -5,12 +5,17 @@ from app.models import User
 
 
 class PostForm(FlaskForm):
-    head = StringField('Heading', validators=[DataRequired()])
-    tag = StringField('Tag', validators=[DataRequired()])
-    post = TextAreaField(validators=[
+    name = StringField('Tag', validators=[DataRequired()])
+    heading = StringField('Heading', validators=[DataRequired()])
+    body = TextAreaField(validators=[
         DataRequired(), Length(min=1, max=140)
     ])
     submit = SubmitField('Submit')
+
+
+# class TagForm(FlaskForm):
+#     name = StringField('Tag', validators=[DataRequired()])
+#     submit = SubmitField('record Tag')
 
 
 class LoginForm(FlaskForm):

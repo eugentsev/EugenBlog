@@ -29,11 +29,20 @@ class User(UserMixin, db.Model):
         return '<User {}>'.format(self.username)
 
 
-#   Need to do migration
-class Postag(db.Model):
+class Posttag(db.Model):
+    __tablename__ = 'postag'
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     tag_id = db.Column(db.Integer, db.ForeignKey('tag.id'))
+
+
+class Tag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(32), unique=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+
+    def __repr__(self):
+        return '<Tag {}>'.format(self.name)
 
 
 class Post(db.Model):
@@ -42,22 +51,18 @@ class Post(db.Model):
     body = db.Column(db.String(140))
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    postag = db.relationship('Postag', secondary=Postag,
-                             primaryjoin=(Postag.post_id == id),
-                             secondaryjoin=(Postag.tag_id == id),
-                             backref=db.backref('Postag', lazy='dynamic'), lazy='dynamic')
+    tags = db.relationship('Tag', secondary='postag', lazy='dynamic')
+
+    def add_tags(self, post):
+        self.tags.append(post)
+
+    def is_following(self, post):
+        return self.tags.filter(
+            Posttag.post_id == post.id).count() > 0
 
     def __repr__(self):
         return '<Post {}>'.format(self.body)
 
 
-#   Need to do migration
-class Tag(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
-    def __repr__(self):
-        return '<Tag {}>'.format(self.tag)
 
 
