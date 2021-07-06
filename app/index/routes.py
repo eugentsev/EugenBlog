@@ -23,13 +23,23 @@ def index():
     if form.validate_on_submit():
         post = Post(heading=form.heading.data, body=form.body.data, author=current_user)
         tag_s = form.name.data.split(',')
-        print(tag_s)
         tags_obj = []
+
         for tag in tag_s:
             print(tag)
-            tags_obj.append(Tag(name=tag))
-            print(tags_obj)
-        post.tags.extend(tags_obj)
+            tags_db = f'''
+            select name from tag
+            where name='{tag}'
+            '''
+            result = db.session.execute(tags_db).fetchall()
+            for tag_db in result:
+                tag_db
+
+            if tag not in tag_db:
+                tags_obj.append(Tag(name=tag))
+                post.tags.extend(tags_obj)
+            else:
+                post.tags.extend(tags_obj)
         db.session.add_all(tags_obj)
         db.session.add(post)
         db.session.commit()
@@ -47,7 +57,7 @@ def login():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Invalid username or password')
-            return redirect(url_for('login'))
+            return redirect(url_for('index.login'))
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc !='':
